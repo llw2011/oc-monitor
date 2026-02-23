@@ -8,6 +8,8 @@
 
 ## 这是什么
 
+![OC-Monitor 首页预览](./docs/v3-style.jpg)
+
 OC-Monitor 是一个可自部署、可分享的轻量监控系统，核心目标是：
 
 - 看清节点在线状态、资源健康与模型 Provider 可用性
@@ -238,7 +240,10 @@ curl -s http://127.0.0.1:3888/healthz
 ## 文档导航
 
 - 中文完整安装：[`docs/INSTALL_FULL_ZH.md`](./docs/INSTALL_FULL_ZH.md)
-- 版本演进：[`docs/EVOLUTION_V0_TO_V31.md`](./docs/EVOLUTION_V0_TO_V31.md)
+- 版本演进（V0→V3.1 详细过程）：[`docs/EVOLUTION_V0_TO_V31.md`](./docs/EVOLUTION_V0_TO_V31.md)
+- V1 范围：[`docs/v1-scope.md`](./docs/v1-scope.md)
+- V2 范围：[`docs/v2-scope.md`](./docs/v2-scope.md)
+- V3.1 范围：[`docs/v3.1-scope.md`](./docs/v3.1-scope.md)
 - 部署参考：[`docs/DEPLOY.md`](./docs/DEPLOY.md)
 - English README：[`README-English.md`](./README-English.md)
 
