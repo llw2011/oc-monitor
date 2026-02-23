@@ -1,0 +1,22 @@
+OC-Monitor V1 交付摘要
+
+已完成：
+- Step 0 范围冻结
+- Step 1 项目骨架
+- Step 2 Server API + SQLite
+- Step 3 WebSocket 实时推送
+- Step 4 Agent 注册与心跳上报
+- Step 5 前端看板（节点/事件/日志分页）
+- Step 6 一键部署脚本（install/status/uninstall）
+- Step 7 轻压测与稳定性验证
+
+关键验证：
+- 12 节点并发心跳，19s 内 210 次上报
+- /api/nodes 平均 3.99ms（P95 4.36ms）
+- /api/logs 平均 4.33ms（max 5.06ms）
+- WS 32s 长连接稳定，心跳保活正常
+
+入口：
+- Dashboard: http://<server_ip>:3800/
+- 部署文档: docs/DEPLOY.md
+- 故障排查: docs/TROUBLESHOOTING.md

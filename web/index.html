@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenClaw Mission Control V2</title>
+  <style>
+    :root{--bg:#060b1a;--panel:#0c1429;--panel2:#0f1933;--line:#1a2a52;--text:#dfe9ff;--muted:#7f93c4;--cyan:#2de2ff;--green:#25e187;--pink:#ff5b93;--red:#ff5b6e;--amber:#ffc46b}
+    body.light{--bg:#eef3ff;--panel:#ffffff;--panel2:#f7faff;--line:#d5def5;--text:#122143;--muted:#5a6b95;--cyan:#0aa3d4;--green:#0fa15d;--pink:#d64077;--red:#cb3348;--amber:#cb8a2f}
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(1200px 600px at 20% -10%,#11234e33,transparent),var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui}
+
+    .wrap{max-width:1320px;margin:0 auto;padding:18px;overflow-x:hidden}
+    .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+    .brand{font-size:40px;font-weight:800;letter-spacing:.5px;background:linear-gradient(90deg,#37f3ff,#95a4ff 40%,#d7dcff 75%);-webkit-background-clip:text;color:transparent;word-break:break-word}
+
+    .top-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+    .top-actions{display:flex;align-items:center;gap:12px;font-size:16px;color:var(--muted);user-select:none;justify-content:flex-end}
+    .icon-btn{background:transparent !important;border:none !important;padding:0 !important;cursor:pointer;color:var(--muted);font-size:24px;line-height:1;transition:all .2s ease}
+    .icon-btn:hover{color:var(--text);transform:translateY(-1px)}
+
+    .smart-strip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);font-size:11px;color:var(--muted);background:linear-gradient(180deg,#0f1c3e,#0c1732)}
+    .status-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 4px #ffc46b1f;animation:pulse 1.8s infinite}
+    .status-pill.ok .status-dot{background:var(--green);box-shadow:0 0 0 4px #25e18722}
+    .status-pill.bad .status-dot{background:var(--red);box-shadow:0 0 0 4px #ff5b6e22}
+    @keyframes pulse{0%{transform:scale(1);opacity:.9}50%{transform:scale(1.15);opacity:.45}100%{transform:scale(1);opacity:.9}}
+    .admin-pill{display:none;align-items:center;gap:6px;font-size:12px;color:var(--muted);padding:4px 10px;border-radius:999px;border:1px dashed var(--line)}
+    .admin-pill.show{display:inline-flex}
+
+    .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin:16px 0}
+    .kpi{background:linear-gradient(180deg,#0e1833,#0b1328);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center}
+    .kpi .v{font-size:38px;font-weight:800}.kpi .l{font-size:13px;color:var(--muted)}
+
+    .tabs{display:flex;gap:10px;border-bottom:1px solid var(--line);margin:8px 0 14px}
+    .tab{padding:10px 14px;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;font-weight:700}
+    .tab.active{color:var(--cyan);border-color:var(--cyan)}
+    .pane{display:none}.pane.active{display:block}
+
+    .node-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:16px;padding:14px}
+    .n-head{display:flex;align-items:center;justify-content:space-between}
+    .n-name{font-size:30px;font-weight:800;display:flex;gap:8px;align-items:center}
+    .dot{width:10px;height:10px;border-radius:50%;background:var(--green)}.dot.off{background:var(--red)}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+    .chip{font-size:11px;padding:3px 8px;border:1px solid #24427e;border-radius:999px;color:#9bc0ff;background:#0e1c3d}
+    .spark{height:44px;border-radius:8px;background:linear-gradient(180deg,#0c2447,#0a1630);display:flex;align-items:flex-end;gap:2px;padding:6px}
+    .spark i{display:block;width:4px;background:#2de2ff88;border-radius:2px}
+    .prov{list-style:none;padding:0;margin:6px 0}.prov li{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}
+    .ok{color:var(--green)}.bad{color:var(--red)}
+    .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .metric .k{font-size:11px;color:var(--muted)}
+    .bar{height:6px;background:#122449;border-radius:999px;overflow:hidden}
+    .bar b{display:block;height:100%;background:linear-gradient(90deg,#2de2ff,#3eff9e)}
+    .metric .p{font-size:12px;font-weight:700}
+    .usage{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+    .u{background:#0f1d3f;border:1px solid #1b3364;border-radius:10px;padding:8px;text-align:center}
+    .u .k{font-size:11px;color:var(--muted)}.u .v{font-size:16px;font-weight:800;color:#4be0ff}
+
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left}
+    th{color:#9fc1ff}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:var(--muted);font-size:12px}
+    .sev{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;border:1px solid var(--line)}
+    .sev-critical{color:#ff9cab;border-color:#8b2f46;background:#3b1420}
+    .sev-warn{color:#ffd48a;border-color:#6b4a16;background:#3a2a11}
+
+    button{background:#102449;border:1px solid #22437c;color:#dfe9ff;border-radius:8px;padding:6px 10px;cursor:pointer}
+
+    .modal-mask{position:fixed;inset:0;background:#0009;backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:99;padding:12px}
+    .modal{width:min(440px,100%);background:linear-gradient(180deg,#121f42,#0b142c);border:1px solid #284a88;border-radius:16px;padding:18px 16px;box-shadow:0 20px 60px #0008}
+    .modal-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .modal-ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#10254b;border:1px solid #2a4f91}
+    .modal h3{margin:0;font-size:18px}
+    .modal-sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .modal .row{display:flex;flex-direction:column;gap:10px}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field label{font-size:12px;color:var(--muted)}
+    .modal input{background:#0c1838;border:1px solid #234a8a;color:#dfe9ff;border-radius:10px;padding:10px}
+    .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+
+    .toast-wrap{position:fixed;right:18px;top:18px;z-index:120;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+    .toast{min-width:260px;max-width:360px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(180deg,#102043,#0c1731);color:var(--text);box-shadow:0 12px 30px #0005;transform:translateY(-8px);opacity:0;transition:all .25s ease}
+    .toast.show{transform:translateY(0);opacity:1}
+    .toast.ok{border-color:#1e7d58}
+    .toast.err{border-color:#8b2f46}
+    .toast .t1{font-size:13px;font-weight:700}
+    .toast .t2{font-size:12px;color:var(--muted);margin-top:2px}
+
+    body.light .brand{background:linear-gradient(90deg,#0a86b8,#355ddf 45%,#122143 80%);-webkit-background-clip:text;color:transparent}
+    body.light .status-pill{background:linear-gradient(180deg,#f6f9ff,#edf3ff)}
+    body.light .modal{background:linear-gradient(180deg,#ffffff,#f7faff);border-color:#c8d6f7;box-shadow:0 20px 60px #1a3a7a22}
+    body.light .modal-ico{background:#edf3ff;border-color:#c8d6f7}
+    body.light .modal input{background:#ffffff;border:1px solid #c8d6f7;color:#122143}
+    body.light button{background:#eaf0ff;border:1px solid #bfd0f6;color:#122143}
+    body.light .chip{background:#edf3ff;border-color:#c6d5f7;color:#2a4a8a}
+    body.light .spark{background:linear-gradient(180deg,#e8f2ff,#dfeafe)}
+    body.light .spark i{background:#1aa7d6aa}
+    body.light .u{background:#f3f7ff;border-color:#d4e1fb}
+    body.light .u .v{color:#1f8dc8}
+    body.light .bar{background:#d7e2fb}
+    body.light .toast{background:linear-gradient(180deg,#ffffff,#f5f9ff)}
+
+    @media (max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.node-grid{grid-template-columns:repeat(2,1fr)}.brand{font-size:32px}}
+    @media (max-width:760px){
+      .wrap{padding:10px}
+      .top{display:block;position:relative}
+      .brand{font-size:26px;line-height:1.1;padding-right:120px}
+      .top-right{position:absolute;top:2px;right:6px;align-items:flex-end;margin-top:0}
+      .top-actions{justify-content:flex-end}
+      .smart-strip{justify-content:flex-end}
+      .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+      .kpi{padding:10px}
+      .kpi .v{font-size:28px}
+      .tabs{overflow-x:auto;white-space:nowrap}
+      .tab{flex:0 0 auto}
+      .node-grid{grid-template-columns:1fr}
+      .n-name{font-size:22px}
+      .chips{gap:6px}
+      .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .usage{grid-template-columns:1fr}
+      table{display:block;overflow-x:auto;white-space:nowrap}
+      .toast-wrap{left:10px;right:10px;top:10px}
+      .toast{min-width:0;max-width:none}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><div class="brand">OpenClaw Mission Control</div></div>
+    <div class="top-right">
+      <div class="top-actions">
+        <button class="icon-btn" id="openLoginBtn" title="管理员登录">⚙️</button>
+        <span class="admin-pill" id="adminPill"><span id="adminLabel">Admin</span></span>
+        <button class="icon-btn" id="openTokenBtn" title="Token 解锁">🔒</button>
+        <button class="icon-btn" id="themeBtn" title="切换主题">🌙</button>
+      </div>
+      <div class="smart-strip">
+        <span class="status-pill" id="wsState"><span class="status-dot"></span><span id="wsText">Realtime linking…</span></span>
+        <span class="status-pill" id="syncState">Sync: --</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="kpis" id="kpis"></section>
+  <div class="tabs"><div class="tab active" data-pane="nodes">节点</div><div class="tab" data-pane="health">健康总览</div><div class="tab" data-pane="alerts">告警中心</div><div class="tab" data-pane="audit">审计</div><div class="tab" data-pane="providers">供应商矩阵</div><div class="tab" data-pane="logs">请求日志</div></div>
+  <section class="pane active" id="pane-nodes"><div class="meta" id="mergeHint" style="margin:4px 0 10px;display:none"></div><div class="node-grid" id="nodeGrid"></div></section>
+  <section class="pane" id="pane-health"><div class="card"><div class="toolbar"><div>系统健康总览</div><div class="meta" id="healthMeta">-</div></div><table><thead><tr><th>项</th><th>值</th></tr></thead><tbody id="healthBody"></tbody></table></div></section>
+  <section class="pane" id="pane-alerts"><div class="card"><div class="toolbar"><div>告警中心（最小可用）</div><div class="meta" id="alertMeta">-</div></div><table><thead><tr><th>级别</th><th>节点</th><th>类型</th><th>消息</th><th>当前值</th><th>阈值</th><th>操作</th></tr></thead><tbody id="alertBody"></tbody></table></div></section>
+  <section class="pane" id="pane-audit"><div class="card"><div class="toolbar"><div>管理员审计日志</div><div><button id="auditExportBtn">导出 CSV</button></div></div><table><thead><tr><th>时间</th><th>类型</th><th>消息</th><th>来源</th></tr></thead><tbody id="auditBody"></tbody></table></div></section>
+  <section class="pane" id="pane-providers"><div class="card"><div class="toolbar"><div>供应商健康矩阵</div><div class="meta" id="providerMeta"></div></div><table><thead><tr><th>节点</th><th>供应商</th><th>健康</th><th>延迟</th></tr></thead><tbody id="providerBody"></tbody></table></div></section>
+  <section class="pane" id="pane-logs"><div class="card"><div class="toolbar"><div>请求日志</div><div><button id="prevBtn">上一页</button> <span id="pageInfo">-</span> <button id="nextBtn">下一页</button></div></div><table><thead><tr><th>时间</th><th>节点</th><th>级别</th><th>类型</th><th>消息</th></tr></thead><tbody id="logBody"></tbody></table></div></section>
+</div>
+
+<div class="modal-mask" id="tokenModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-ico">🔐</div>
+      <div>
+        <h3>Token 解锁</h3>
+        <div class="modal-sub">输入访问令牌以切换完整视图权限</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="tokenInput">Dashboard Token</label>
+        <input id="tokenInput" placeholder="例如：ocm_xxx_xxx">
+      </div>
+    </div>
+    <div class="actions">
+      <button id="cancelTokenBtn">取消</button>
+      <button id="unlockBtn">解锁</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="loginModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-ico">🛡️</div>
+      <div>
+        <h3>管理员登录</h3>
+        <div class="modal-sub">登录后可执行管理操作并查看完整功能</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="adminUser">账号</label>
+        <input id="adminUser" placeholder="管理员账号" value="admin">
+      </div>
+      <div class="field">
+        <label for="adminPass">密码</label>
+        <input id="adminPass" placeholder="请输入管理员密码" type="password">
+      </div>
+    </div>
+    <div class="actions">
+      <button id="cancelLoginBtn">取消</button>
+      <button id="loginBtn">登录</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+let page=1,totalPages=1,dashToken=localStorage.getItem('ocm_dash_token')||'',ws;
+let providerMap = new Map();
+const fmtTs=(ts)=>ts?new Date(ts*1000).toLocaleString():'-';
+const pct=(u,t)=>(!u||!t)?0:Math.max(0,Math.min(100,(u/t)*100));
+const mb=(b)=>!b?0:b/1024/1024; const rint=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const headers=()=>dashToken?{'x-dashboard-token':dashToken}:{};
+async function jget(url){const r=await fetch(url,{headers:headers()}); return r.json();}
+async function jpost(url,body){const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json',...headers()},body:JSON.stringify(body||{})}); return r.json();}
+function spark(seed){let base=35+Math.sin(seed)*10,arr=[]; for(let i=0;i<34;i++){base=Math.max(8,Math.min(92,base+rint(-12,12)));arr.push(base)} return arr.map(v=>`<i style="height:${v}%"></i>`).join('')}
+function applyTheme(){const t=localStorage.getItem('ocm_theme')||'dark'; document.body.classList.toggle('light',t==='light');}
+
+function setWS(kind,text){
+  const el=document.getElementById('wsState');
+  const tx=document.getElementById('wsText');
+  el.classList.remove('ok','bad');
+  if(kind==='ok') el.classList.add('ok');
+  if(kind==='bad') el.classList.add('bad');
+  tx.textContent=text;
+}
+
+function toast(type,title,msg){
+  const wrap=document.getElementById('toastWrap');
+  const t=document.createElement('div');
+  t.className=`toast ${type==='error'?'err':'ok'}`;
+  t.innerHTML=`<div class="t1">${title}</div><div class="t2">${msg||''}</div>`;
+  wrap.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add('show'));
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),250)},2600);
+}
+
+function renderKPIs(nodes){
+  const online=nodes.filter(n=>n.online).length;
+  const today=nodes.reduce((s,n)=>s+(n.metrics?.mem_used_bytes||0),0)/1024/1024;
+  const week=today*3.2,month=today*11.5,sessions=nodes.length*9+online*3;
+  const providerSet=new Set();
+  for(const arr of providerMap.values()){for(const p of (arr||[])){if(p?.provider) providerSet.add(p.provider)}}
+  const providers=providerSet.size;
+  const ks=[['#45e9ff',`${online}/${nodes.length||0}`,'在线节点'],['#a5afff',`${today.toFixed(1)}M`,'今日用量'],['#ffc37d',`${week.toFixed(1)}M`,'本周用量'],['#52ff9b',`${month.toFixed(1)}M`,'本月用量'],['#ffd16a',`${sessions}`,'会话数'],['#ff6f9d',`${providers}`,'供应商']];
+  document.getElementById('kpis').innerHTML=ks.map(k=>`<div class="kpi"><div class="v" style="color:${k[0]}">${k[1]}</div><div class="l">${k[2]}</div></div>`).join('')
+}
+
+function renderNodes(nodes){
+  renderKPIs(nodes);
+  const now=new Date();
+  document.getElementById('syncState').textContent=`Sync: ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'})}`;
+  const hint=document.getElementById('mergeHint');
+  const mergedCount=nodes.filter(n=>(n.merged_agents||1)>1).length;
+  hint.style.display='block';
+  hint.textContent=mergedCount>0?`已自动合并 ${mergedCount} 个重复主机（同IP）`:'合并策略已开启：当前无可合并重复主机';
+  const g=document.getElementById('nodeGrid');
+  if(!nodes.length){g.innerHTML='<div class="card">暂无节点</div>';return;}
+  g.innerHTML=nodes.map((n,i)=>{
+    const m=n.metrics||{};
+    const cpu=Math.max(0,Math.min(100,m.cpu_percent||0)),mem=pct(m.mem_used_bytes,m.mem_total_bytes),disk=pct(m.disk_used_bytes,m.disk_total_bytes),swap=pct(m.swap_used_bytes,m.swap_total_bytes);
+    const pv=(providerMap.get(n.agent_id)||[]);
+    const providerRows=(pv.length?pv.map(p=>`<li><span>${p.provider}</span><span class="${p.healthy?'ok':'bad'}">${p.healthy?'✓':'✗'} ${p.latency_ms?`${p.latency_ms}ms`:'timeout'}</span></li>`).join(''):'<li><span>未配置供应商</span><span class="bad">-</span></li>');
+    const mergeChip=(n.merged_agents&&n.merged_agents>1)?`<span class="chip" title="来源: ${(n.merged_names||[]).join(', ')}">已合并${n.merged_agents}源</span>`:'';
+    return `<article class="card"><div class="n-head"><div class="n-name"><span class="dot ${n.online?'':'off'}"></span>${n.name||n.hostname||n.agent_id}</div><div class="meta">•••</div></div><div class="chips"><span class="chip">${n.online?'worker':'offline'}</span><span class="chip">${(n.os||'unknown').slice(0,20)}</span><span class="chip">${n.ip||'-'}</span>${mergeChip}</div><div class="spark">${spark(i+cpu)}</div><ul class="prov">${providerRows}</ul><div class="metrics"><div class="metric"><div class="k">cpu</div><div class="bar"><b style="width:${cpu}%"></b></div><div class="p">${cpu.toFixed(1)}%</div></div><div class="metric"><div class="k">mem</div><div class="bar"><b style="width:${mem}%"></b></div><div class="p">${mem.toFixed(1)}%</div></div><div class="metric"><div class="k">disk</div><div class="bar"><b style="width:${disk}%"></b></div><div class="p">${disk.toFixed(1)}%</div></div><div class="metric"><div class="k">swap</div><div class="bar"><b style="width:${swap}%"></b></div><div class="p">${swap.toFixed(1)}%</div></div></div><div class="usage"><div class="u"><div class="k">今日</div><div class="v">${(mb(m.mem_used_bytes)*0.9).toFixed(1)}M</div></div><div class="u"><div class="k">本周</div><div class="v">${(mb(m.mem_used_bytes)*3.1).toFixed(1)}M</div></div><div class="u"><div class="k">本月</div><div class="v">${(mb(m.mem_used_bytes)*11.2).toFixed(1)}M</div></div></div></article>`
+  }).join('')
+}
+
+async function fetchNodes(){const d=await jget('/api/nodes');renderNodes(d.nodes||[])}
+async function fetchHealth(){
+  const d=await jget('/api/system/health');
+  document.getElementById('healthMeta').textContent=`uptime ${Math.floor((d.uptime_sec||0)/60)}m · ws ${d.ws_clients||0}`;
+  const rows=[];
+  rows.push(`<tr><td>节点状态</td><td>${d.nodes?.online||0}/${d.nodes?.total||0} online</td></tr>`);
+  rows.push(`<tr><td>WebSocket 客户端</td><td>${d.ws_clients||0}</td></tr>`);
+  rows.push(`<tr><td>数据库事件数</td><td>${d.database?.events||0}</td></tr>`);
+  rows.push(`<tr><td>心跳记录数</td><td>${d.database?.heartbeats||0}</td></tr>`);
+  rows.push(`<tr><td>留存策略</td><td>events ${d.retention?.events_days||'-'} 天 / heartbeats ${d.retention?.heartbeats_days||'-'} 天</td></tr>`);
+  rows.push(`<tr><td>上次清理</td><td>${d.retention?.last_cleanup_ts?fmtTs(d.retention.last_cleanup_ts):'未发生'}</td></tr>`);
+  const ps=d.providers||{};
+  for(const k of Object.keys(ps)){rows.push(`<tr><td>Provider ${k}</td><td>${ps[k].healthy?'healthy':'down'} ${ps[k].latency_ms?`· ${ps[k].latency_ms}ms`:''}</td></tr>`)}
+  document.getElementById('healthBody').innerHTML=rows.join('');
+}
+
+async function fetchAlerts(){
+  const d=await jget('/api/alerts');
+  document.getElementById('alertMeta').textContent=`critical ${d.critical||0} · warn ${d.warn||0} · actionable ${d.actionable_critical||0}`;
+  const rows=(d.items||[]).map(a=>{
+    const st = a.acked ? '已确认' : (a.silenced ? '已静默' : '待处理');
+    const op = `<button data-act="ack" data-id="${a.id}">ACK</button> <button data-act="silence" data-id="${a.id}">静默30m</button>`;
+    return `<tr><td><span class="sev ${a.severity==='critical'?'sev-critical':'sev-warn'}">${a.severity}</span></td><td>${a.node||a.agent_id||'-'}</td><td>${a.type}</td><td>${a.message} <span class="meta">(${st})</span></td><td>${a.value ?? '-'}</td><td>${a.threshold ?? '-'}</td><td>${op}</td></tr>`;
+  });
+  document.getElementById('alertBody').innerHTML=rows.join('')||'<tr><td colspan="7">当前无告警</td></tr>';
+  for(const b of document.querySelectorAll('#alertBody button[data-act]')){
+    b.onclick=async()=>{
+      const id=b.dataset.id; const act=b.dataset.act;
+      try{
+        if(act==='ack') await jpost('/api/alerts/ack',{alert_id:id});
+        if(act==='silence') await jpost('/api/alerts/silence',{alert_id:id,minutes:30});
+        toast('ok','告警状态已更新',`${act.toUpperCase()} ${id}`);
+        await fetchAlerts();
+      }catch{
+        toast('error','操作失败','请先管理员登录');
+      }
+    };
+  }
+}
+async function fetchProviders(){const d=await jget('/api/providers');providerMap=new Map((d.items||[]).map(x=>[x.agent_id,x.providers||[]]));const rows=[];(d.items||[]).forEach(n=>n.providers.forEach(p=>rows.push(`<tr><td>${n.name}</td><td>${p.provider}</td><td>${p.healthy?'<span class="ok">healthy</span>':'<span class="bad">down</span>'}</td><td>${p.latency_ms?`${p.latency_ms} ms`:'-'}</td></tr>`)));document.getElementById('providerBody').innerHTML=rows.join('')||'<tr><td colspan="4">暂无数据</td></tr>'}
+async function fetchAudit(){
+  try{
+    const d=await jget('/api/audit?page=1&pageSize=50');
+    const rows=(d.items||[]).map(i=>{
+      let src='-';
+      try{const m=JSON.parse(i.meta_json||'{}'); src=(m.ip||'-');}catch{}
+      return `<tr><td>${fmtTs(i.ts)}</td><td>${i.type}</td><td>${i.message}</td><td>${src}</td></tr>`;
+    });
+    document.getElementById('auditBody').innerHTML=rows.join('')||'<tr><td colspan="4">暂无审计记录</td></tr>';
+  }catch{
+    document.getElementById('auditBody').innerHTML='<tr><td colspan="4">请先管理员登录后查看</td></tr>';
+  }
+}
+async function fetchLogs(){const d=await jget(`/api/logs?page=${page}&pageSize=30`);totalPages=d.totalPages||1;document.getElementById('pageInfo').textContent=`第 ${d.page}/${totalPages} 页 · ${d.total} 条`;document.getElementById('logBody').innerHTML=(d.items||[]).map(i=>`<tr><td>${fmtTs(i.ts)}</td><td>${i.agent_id||'-'}</td><td>${i.level}</td><td>${i.type}</td><td>${i.message}</td></tr>`).join('')}
+
+async function refreshAll(){await fetchNodes(); await fetchHealth(); await fetchAlerts(); await fetchProviders(); await fetchAudit(); await fetchLogs();}
+function connectWS(){
+  if(ws){try{ws.close()}catch{}}
+  const qp=dashToken?`?token=${encodeURIComponent(dashToken)}`:'';
+  ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws'+qp);
+  ws.onopen=()=>setWS('ok','Realtime online');
+  ws.onclose=()=>{setWS('warn','Realtime reconnecting…');setTimeout(connectWS,1500)};
+  ws.onerror=()=>setWS('bad','Realtime unstable');
+  ws.onmessage=(e)=>{try{const m=JSON.parse(e.data);if(m.type==='node:update'&&m.data?.nodes){renderNodes(m.data.nodes);fetchAlerts();fetchHealth();}if(m.type==='event:new'){fetchLogs();fetchAudit();}}catch{}}}
+
+const tokenModal=document.getElementById('tokenModal');
+const loginModal=document.getElementById('loginModal');
+
+document.getElementById('openTokenBtn').onclick=()=>{tokenModal.style.display='flex'; document.getElementById('tokenInput').focus();};
+document.getElementById('cancelTokenBtn').onclick=()=>{tokenModal.style.display='none';};
+tokenModal.addEventListener('click',(e)=>{ if(e.target===tokenModal) tokenModal.style.display='none'; });
+
+document.getElementById('unlockBtn').onclick=async()=>{
+  const input=document.getElementById('tokenInput').value.trim();
+  dashToken=input;
+  localStorage.setItem('ocm_dash_token',dashToken);
+  tokenModal.style.display='none';
+  await refreshAll();
+  connectWS();
+  try{
+    const probe=await jget('/api/nodes');
+    if(probe.masked){
+      toast('error','Token 可能无效','仍为脱敏视图，请检查后重试');
+    }else{
+      toast('ok','解锁成功','已切换为完整视图');
+    }
+  }catch{
+    toast('error','解锁状态未知','请求异常，请稍后重试');
+  }
+};
+document.getElementById('tokenInput').addEventListener('keydown',(e)=>{ if(e.key==='Enter') document.getElementById('unlockBtn').click(); });
+
+document.getElementById('openLoginBtn').onclick=()=>{loginModal.style.display='flex'; document.getElementById('adminPass').focus();};
+document.getElementById('cancelLoginBtn').onclick=()=>{loginModal.style.display='none';};
+loginModal.addEventListener('click',(e)=>{ if(e.target===loginModal) loginModal.style.display='none'; });
+document.getElementById('loginBtn').onclick=async()=>{
+  const username=document.getElementById('adminUser').value.trim();
+  const password=document.getElementById('adminPass').value;
+  const r=await jpost('/api/admin/login',{username,password});
+  if(!r.ok){
+    toast('error','登录失败',r.error||'账号或密码不正确');
+    return;
+  }
+  document.getElementById('adminPass').value='';
+  loginModal.style.display='none';
+  await refreshAll();
+  connectWS();
+  document.getElementById('adminLabel').textContent='Admin';
+  document.getElementById('adminPill').classList.add('show');
+  toast('ok','登录成功','管理员权限已激活');
+};
+document.getElementById('adminPass').addEventListener('keydown',(e)=>{ if(e.key==='Enter') document.getElementById('loginBtn').click(); });
+document.getElementById('adminPill').onclick=async()=>{
+  if(!confirm('退出管理员登录？')) return;
+  await jpost('/api/admin/logout',{});
+  await refreshAll();
+  connectWS();
+  document.getElementById('adminPill').classList.remove('show');
+  toast('ok','已退出管理员','当前为普通访问权限');
+};
+document.getElementById('themeBtn').onclick=()=>{const t=localStorage.getItem('ocm_theme')==='light'?'dark':'light';localStorage.setItem('ocm_theme',t);applyTheme();document.getElementById('themeBtn').textContent=t==='light'?'☀️':'🌙';};
+
+document.getElementById('tokenInput').value=dashToken;
+for(const t of document.querySelectorAll('.tab')) t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));t.classList.add('active');document.getElementById('pane-'+t.dataset.pane).classList.add('active');}
+document.getElementById('prevBtn').onclick=()=>{if(page>1){page--;fetchLogs();}};document.getElementById('nextBtn').onclick=()=>{if(page<totalPages){page++;fetchLogs();}};
+document.getElementById('auditExportBtn').onclick=()=>{window.open('/api/audit/export.csv','_blank');};
+(async()=>{
+  applyTheme();
+  const t=localStorage.getItem('ocm_theme')||'dark';
+  document.getElementById('themeBtn').textContent=t==='light'?'☀️':'🌙';
+  const me=await jget('/api/admin/me');
+  if(me.logged_in){document.getElementById('adminLabel').textContent='Admin'; document.getElementById('adminPill').classList.add('show');}
+  await refreshAll();
+  connectWS();
+})();
+</script>
+</body>
+</html>
