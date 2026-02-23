@@ -130,18 +130,108 @@ OC-Monitor 是一个可自部署、可分享的轻量监控系统，核心目标
 
 ---
 
-## 快速启动（中文）
+## 快速启动（本地部署 / 中文详细版）
+
+> 适合第一次部署的用户，按顺序执行即可。默认示例端口为 `3888`。
+
+### 1) 环境准备
+
+- 操作系统：Linux / macOS / Windows（建议先用 Linux）
+- Node.js：建议 `v20+`（已在 `v22` 验证）
+- npm：随 Node 安装
+
+先检查版本：
+
+```bash
+node -v
+npm -v
+```
+
+---
+
+### 2) 克隆项目并进入目录
+
+```bash
+git clone https://github.com/llw2011/oc-monitor.git
+cd oc-monitor
+```
+
+---
+
+### 3) 生成本地配置文件
 
 ```bash
 cp .env.example .env
-# 按需修改 .env
+```
 
+然后编辑 `.env`（至少改下面这几项）：
+
+```env
+PORT=3888
+DB_PATH=./server/monitor.db
+DASHBOARD_TOKEN=请改成你自己的token
+ADMIN_USER=admin
+ADMIN_PASS=请改成你自己的管理员密码
+SESSION_SECRET=请改成随机长字符串
+```
+
+> 提示：
+> - 第一次可先不配 Telegram，保持 `ALERT_NOTIFY_ENABLED=0`
+> - 生产环境务必改默认密码与 token
+
+---
+
+### 4) 安装依赖
+
+```bash
 cd server
 npm install
+```
+
+---
+
+### 5) 启动服务
+
+```bash
 node index.js
 ```
 
-访问：`http://<host>:<port>/`
+看到类似日志代表启动成功：
+
+- `server listening on ...`
+- `ws ready ...`
+
+---
+
+### 6) 访问面板
+
+浏览器打开：
+
+- `http://127.0.0.1:3888/`（本机）
+- `http://<你的服务器IP>:3888/`（局域网其它机器）
+
+---
+
+### 7) 快速自检（建议）
+
+健康检查：
+
+```bash
+curl -s http://127.0.0.1:3888/healthz
+```
+
+应返回 `{"ok":true}`（或等价健康 JSON）。
+
+---
+
+### 8) 常见问题（最短排障）
+
+1. **端口占用**：把 `.env` 里的 `PORT` 改成其它端口后重启
+2. **页面空白**：先看 `server` 控制台是否有报错
+3. **登录失败**：确认 `.env` 的 `ADMIN_USER/ADMIN_PASS` 与输入一致
+4. **无节点数据**：Agent 还没上报，先看 `agent/` 安装说明
+
+更完整排障见：[`docs/TROUBLESHOOTING.md`](./docs/TROUBLESHOOTING.md)
 
 ---
 
