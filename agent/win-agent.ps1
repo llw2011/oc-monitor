@@ -1,8 +1,14 @@
+param(
+  [string]$Server = 'http://127.0.0.1:3888',
+  [string]$StateFile = "$env:USERPROFILE\\.oc-monitor-agent\\state.json",
+  [string]$NodeName = $env:COMPUTERNAME,
+  [int]$Interval = 15
+)
+
 $ErrorActionPreference = 'SilentlyContinue'
 
-$Server = 'http://127.0.0.1:3888'
-$StateFile = 'D:\oc-monitor-v21\runtime\win-agent-state.json'
-$NodeName = 'Wolf-Server'
+$stateDir = Split-Path -Parent $StateFile
+if (!(Test-Path $stateDir)) { New-Item -ItemType Directory -Force -Path $stateDir | Out-Null }
 
 function Get-IPv4 {
   try {
@@ -40,9 +46,7 @@ function Get-Metrics {
   $memTotal = 0
   $diskUsed = 0
   $diskTotal = 0
-  try {
-    $cpu = [math]::Round((Get-Counter '\Processor(_Total)\% Processor Time').CounterSamples[0].CookedValue, 2)
-  } catch {}
+  try { $cpu = [math]::Round((Get-Counter '\Processor(_Total)\% Processor Time').CounterSamples[0].CookedValue, 2) } catch {}
   try {
     $os = Get-CimInstance Win32_OperatingSystem
     $memTotal = [int64]$os.TotalVisibleMemorySize * 1024
@@ -88,5 +92,5 @@ while ($true) {
       Save-State $state
     } catch {}
   }
-  Start-Sleep -Seconds 15
+  Start-Sleep -Seconds $Interval
 }

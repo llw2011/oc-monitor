@@ -44,6 +44,12 @@ node index.js
 - 通知默认关闭：`ALERT_NOTIFY_ENABLED=0`
 - 需要 Telegram 通知时再填 `TELEGRAM_BOT_TOKEN` 与 `TELEGRAM_CHAT_ID`
 
+## 文档导航
+
+- 中文完整安装：`docs/INSTALL_FULL_ZH.md`
+- 版本演进：`docs/EVOLUTION_V0_TO_V31.md`
+- 部署参考：`docs/DEPLOY.md`
+
 ## 当前能力
 
 - 节点总览 + Provider 健康矩阵 + 日志

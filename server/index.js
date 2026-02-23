@@ -115,9 +115,9 @@ const PROVIDER_TARGETS = (() => {
   const raw = String(process.env.PROVIDER_TARGETS || '').trim();
   if (!raw) {
     return {
-      lmstudio7b: 'http://192.168.10.248:8085/v1/models',
-      lmstudio3b: 'http://192.168.10.248:8088/v1/models',
-      ollama: 'http://192.168.10.248:11438/v1/models',
+      lmstudio7b: 'http://127.0.0.1:8085/v1/models',
+      lmstudio3b: 'http://127.0.0.1:8088/v1/models',
+      ollama: 'http://127.0.0.1:11438/v1/models',
     };
   }
   if (raw.startsWith('{')) {

@@ -1,78 +1,50 @@
-# OC-Monitor V1 部署文档
+# OC-Monitor 部署速览
 
-## 1. Server 部署
+> 快速版，详细请看：`INSTALL_FULL_ZH.md`
+
+## Server（Linux）
 
 ```bash
 cd oc-monitor
 bash scripts/install.sh
 ```
 
-默认：
-- 监听：`0.0.0.0:3800`
-- 数据库：`~/.oc-monitor/monitor.db`
-- 日志：`~/.oc-monitor/logs/server.out`
+默认读取：
 
-检查状态：
+- `.env`
+- `.env.local`（覆盖）
+
+默认端口：`3888`
+
+## Agent（Linux）
+
 ```bash
-bash scripts/status.sh
+cd oc-monitor/agent
+bash install-agent.sh -s http://<SERVER_IP>:3888 -n "node-01" -i 15
 ```
 
-停止服务：
+## Agent（Windows）
+
+```powershell
+cd .\oc-monitor\agent
+.\install-agent-win.ps1 -Server "http://<SERVER_IP>:3888" -NodeName "win-node-01" -Interval 15
+```
+
+## 健康检查
+
+```bash
+curl http://127.0.0.1:3888/healthz
+```
+
+## 升级
+
+```bash
+cd oc-monitor
+bash scripts/install.sh
+```
+
+## 卸载（仅停止服务）
+
 ```bash
 bash scripts/uninstall.sh
 ```
-
----
-
-## 2. Agent 部署（每个节点）
-
-把 `oc-monitor/agent/` 目录同步到节点后执行：
-
-```bash
-cd agent
-bash install-agent.sh -s http://<SERVER_IP>:3800 -n "<节点名>" -i 15
-```
-
-参数说明：
-- `-s` Server 地址（必填）
-- `-n` 节点名称（可选）
-- `-i` 心跳间隔秒（可选，默认 15）
-
-Agent 状态文件：
-- `~/.oc-monitor-agent/state.json`
-
----
-
-## 3. Dashboard 访问
-
-- `http://<SERVER_IP>:3800/`
-
-页面包含：
-- 节点总览
-- 实时事件流
-- 日志分页
-
----
-
-## 4. 升级步骤
-
-Server 升级：
-```bash
-cd oc-monitor
-bash scripts/install.sh
-```
-
-Agent 升级：
-```bash
-cd agent
-bash install-agent.sh -s http://<SERVER_IP>:3800 -n "<节点名>" -i 15
-```
-
----
-
-## 5. 最小验证清单
-
-- [ ] `scripts/status.sh` 显示 running
-- [ ] `curl http://127.0.0.1:3800/healthz` 返回 `ok:true`
-- [ ] Dashboard 能看到节点 online/offline
-- [ ] 日志分页能翻页
